@@ -10,26 +10,68 @@
 </head>
 <body>
 <canvas id="game" width="360" height="480"></canvas>
+
 <script>
-const c = document.getElementById("game"), x = c.getContext("2d");
-let y = 200, bX = 180, bY = 240, dx = 2, dy = 2;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-c.addEventListener("touchmove", e => y = e.touches[0].clientY - 60);
+let paddleY = 200;
+let ballX = 180, ballY = 240;
+let dx = 2.5, dy = 2;
+const paddleSpeed = 6;
 
-function loop(){
-  x.clearRect(0,0,360,480);
-  x.fillStyle="white";
-  x.fillRect(20,y,10,80);
-  x.beginPath(); x.arc(bX,bY,6,0,Math.PI*2); x.fill();
+// KEYBOARD CONTROLS (Laptop)
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp") paddleY -= paddleSpeed;
+  if (e.key === "ArrowDown") paddleY += paddleSpeed;
+});
 
-  bX+=dx; bY+=dy;
-  if(bY<0||bY>480) dy*=-1;
-  if(bX<30 && bY>y && bY<y+80) dx*=-1;
-  if(bX>360) { bX=180; bY=240; }
-
-  requestAnimationFrame(loop);
+// GYRO CONTROLS (Phone)
+if (window.DeviceOrientationEvent) {
+  window.addEventListener("deviceorientation", e => {
+    if (e.beta !== null) {
+      paddleY += e.beta * 0.05;
+    }
+  });
 }
-loop();
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Paddle
+  ctx.fillStyle = "white";
+  ctx.fillRect(20, paddleY, 10, 80);
+
+  // Ball
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ball movement
+  ballX += dx;
+  ballY += dy;
+
+  if (ballY <= 0 || ballY >= canvas.height) dy *= -1;
+
+  // Paddle collision
+  if (ballX < 30 && ballY > paddleY && ballY < paddleY + 80) {
+    dx *= -1;
+  }
+
+  // Reset
+  if (ballX < 0 || ballX > canvas.width) {
+    ballX = 180;
+    ballY = 240;
+  }
+
+  // Limits
+  paddleY = Math.max(0, Math.min(canvas.height - 80, paddleY));
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
 </script>
 </body>
 </html>
+
