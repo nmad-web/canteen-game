@@ -2,12 +2,22 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Canteen Pong</title>
+<title>Canteen Game</title>
 <style>
-  body { margin:0; background:#111; display:flex; justify-content:center; align-items:center; height:100vh; }
-  canvas { background:#000; }
+  body {
+    margin: 0;
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  canvas {
+    background: #000;
+  }
 </style>
 </head>
+
 <body>
 <canvas id="game" width="360" height="480"></canvas>
 
@@ -15,22 +25,28 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-let paddleY = 200;
-let ballX = 180, ballY = 240;
-let dx = 2.5, dy = 2;
-const paddleSpeed = 6;
+let paddleX = 140;
+const paddleWidth = 80;
+const paddleHeight = 10;
 
-// KEYBOARD CONTROLS (Laptop)
+let ballX = 180;
+let ballY = 20;
+let dx = 2;
+let dy = 2;
+
+const paddleSpeed = 7;
+
+// Keyboard controls (Laptop)
 document.addEventListener("keydown", e => {
-  if (e.key === "ArrowUp") paddleY -= paddleSpeed;
-  if (e.key === "ArrowDown") paddleY += paddleSpeed;
+  if (e.key === "ArrowLeft") paddleX -= paddleSpeed;
+  if (e.key === "ArrowRight") paddleX += paddleSpeed;
 });
 
-// GYRO CONTROLS (Phone)
+// Gyroscope controls (Mobile)
 if (window.DeviceOrientationEvent) {
   window.addEventListener("deviceorientation", e => {
-    if (e.beta !== null) {
-      paddleY += e.beta * 0.05;
+    if (e.gamma !== null) {
+      paddleX += e.gamma * 0.6;
     }
   });
 }
@@ -40,32 +56,39 @@ function gameLoop() {
 
   // Paddle
   ctx.fillStyle = "white";
-  ctx.fillRect(20, paddleY, 10, 80);
+  ctx.fillRect(paddleX, canvas.height - 20, paddleWidth, paddleHeight);
 
   // Ball
   ctx.beginPath();
   ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ball movement
+  // Move ball
   ballX += dx;
   ballY += dy;
 
-  if (ballY <= 0 || ballY >= canvas.height) dy *= -1;
+  // Wall collisions
+  if (ballX <= 0 || ballX >= canvas.width) dx *= -1;
+  if (ballY <= 0) dy *= -1;
 
   // Paddle collision
-  if (ballX < 30 && ballY > paddleY && ballY < paddleY + 80) {
-    dx *= -1;
+  if (
+    ballY >= canvas.height - 26 &&
+    ballX > paddleX &&
+    ballX < paddleX + paddleWidth
+  ) {
+    dy *= -1;
   }
 
-  // Reset
-  if (ballX < 0 || ballX > canvas.width) {
+  // Miss = reset
+  if (ballY > canvas.height) {
     ballX = 180;
-    ballY = 240;
+    ballY = 20;
+    dy = 2;
   }
 
-  // Limits
-  paddleY = Math.max(0, Math.min(canvas.height - 80, paddleY));
+  // Paddle bounds
+  paddleX = Math.max(0, Math.min(canvas.width - paddleWidth, paddleX));
 
   requestAnimationFrame(gameLoop);
 }
@@ -74,4 +97,3 @@ gameLoop();
 </script>
 </body>
 </html>
-
